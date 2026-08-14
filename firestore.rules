@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Datos operativos del ERP: solo usuarios autenticados (staff) leen/escriben.
+    match /propietarios/{docId} {
+      allow read, write: if signedIn();
+    }
+    match /arrendatarios/{docId} {
+      allow read, write: if signedIn();
+    }
+    match /inmuebles/{docId} {
+      allow read, write: if signedIn();
+    }
+    match /contratos/{docId} {
+      allow read, write: if signedIn();
+    }
+    match /mantenimientos/{docId} {
+      allow read, write: if signedIn();
+    }
+
+    // Contadores para generar códigos secuenciales (INM-0143, ZC-2026-036, etc.)
+    match /counters/{docId} {
+      allow read, write: if signedIn();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
