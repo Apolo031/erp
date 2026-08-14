@@ -82,7 +82,11 @@ export default function PropietarioForm({ id }) {
           </div>
           <div className="row">
             <div className="field"><label>Cédula / NIT<span className="req">*</span></label><input value={form.cedula} onChange={(e) => set('cedula', e.target.value)} /></div>
+            <div className="field"><label>Tipo de documento</label><input placeholder="Ej: CC, NIT..." value={form.tipoDocumento} onChange={(e) => set('tipoDocumento', e.target.value)} /></div>
+          </div>
+          <div className="row">
             <div className="field"><label>Teléfono</label><input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} /></div>
+            <div />
           </div>
           <div className="row">
             <div className="field"><label>Celular</label><input value={form.celular} onChange={(e) => set('celular', e.target.value)} /></div>
@@ -134,8 +138,17 @@ export default function PropietarioForm({ id }) {
               </select>
             </div>
           </div>
-          <div className="row" style={{ gridTemplateColumns: '1fr' }}>
+          <div className="row" style={{ marginBottom: 0 }}>
             <div className="field"><label>Número de cuenta</label><input value={form.numeroCuenta} onChange={(e) => set('numeroCuenta', e.target.value)} /></div>
+            <div />
+          </div>
+        </div>
+
+        <div className="card">
+          <h2>Beneficiario del pago <span className="badge">Solo si es distinto al propietario</span></h2>
+          <div className="row" style={{ marginBottom: 0 }}>
+            <div className="field"><label>Nombre del beneficiario</label><input value={form.beneficiarioNombre} onChange={(e) => set('beneficiarioNombre', e.target.value)} /></div>
+            <div className="field"><label>Cédula / NIT del beneficiario</label><input value={form.beneficiarioCedula} onChange={(e) => set('beneficiarioCedula', e.target.value)} /></div>
           </div>
         </div>
 

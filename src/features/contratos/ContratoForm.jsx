@@ -27,13 +27,17 @@ export default function ContratoForm({ id }) {
   useEffect(() => {
     if (isNew) return;
     contratosApi.get(id).then((data) => {
-      if (data) setForm({ ...emptyContrato(), ...data });
+      if (data) setForm({ ...emptyContrato(), ...data, comision: { ...emptyContrato().comision, ...data.comision } });
       setLoading(false);
     });
   }, [id, isNew]);
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function setComision(field, value) {
+    setForm((f) => ({ ...f, comision: { ...f.comision, [field]: value } }));
   }
 
   async function handleFiles(files) {
@@ -136,6 +140,18 @@ export default function ContratoForm({ id }) {
                 {SEGURO_OPTIONS.map((o) => <option key={o}>{o}</option>)}
               </select>
             </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <h2>Comisión de la agencia {form.numeroContratoOrigen ? <span className="badge">Contrato origen Nº {form.numeroContratoOrigen}</span> : null}</h2>
+          <div className="row">
+            <div className="field"><label>Porcentaje sobre canon</label><input type="number" step="0.1" placeholder="%" value={form.comision.porcentaje} onChange={(e) => setComision('porcentaje', e.target.value)} /></div>
+            <div className="field"><label>Valor comisión sobre canon</label><input placeholder="$" value={form.comision.valorCanon} onChange={(e) => setComision('valorCanon', e.target.value)} /></div>
+          </div>
+          <div className="row" style={{ marginBottom: 0 }}>
+            <div className="field"><label>Porcentaje administración</label><input type="number" step="0.1" placeholder="%" value={form.comision.porcentajeAdministracion} onChange={(e) => setComision('porcentajeAdministracion', e.target.value)} /></div>
+            <div className="field"><label>Valor comisión + IVA</label><input placeholder="$" value={form.comision.valorConIva} onChange={(e) => setComision('valorConIva', e.target.value)} /></div>
           </div>
         </div>
 

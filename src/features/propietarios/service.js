@@ -20,10 +20,10 @@ export const TIPO_TITULAR_OPTIONS = ['Persona natural', 'Empresa', 'Herencia', '
 
 export function emptyPropietario() {
   return {
-    nombres: '', apellidos: '', cedula: '', telefono: '', celular: '', email: '', emailNotificaciones: '',
+    nombres: '', apellidos: '', cedula: '', tipoDocumento: '', telefono: '', celular: '', email: '', emailNotificaciones: '',
     direccion: '', ciudad: '', tipoTitular: '',
     tributaria: Object.fromEntries(TRIBUTARY_FLAGS.map((f) => [f.key, false])),
-    banco: '', tipoCuenta: '', numeroCuenta: '',
+    banco: '', tipoCuenta: '', numeroCuenta: '', beneficiarioNombre: '', beneficiarioCedula: '',
     notas: '', documentos: [],
   };
 }

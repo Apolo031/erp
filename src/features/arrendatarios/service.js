@@ -13,7 +13,7 @@ export const ESTADOS = [
 
 export function emptyArrendatario() {
   return {
-    nombres: '', apellidos: '', cedula: '', telefono: '', celular: '', email: '', direccion: '', ciudad: '',
+    nombres: '', apellidos: '', cedula: '', tipoDocumento: '', telefono: '', celular: '', email: '', direccion: '', ciudad: '',
     empresa: '', actividad: '', representanteLegal: '', referencias: '',
     fiador: '', seguro: 'No aplica',
     inmuebleId: '', inmuebleLabel: '',

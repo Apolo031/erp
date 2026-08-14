@@ -20,9 +20,10 @@ export async function nextContratoCodigo() {
 
 export function emptyContrato() {
   return {
-    codigo: '', tipo: 'Arriendo', inmuebleId: '', inmuebleLabel: '', arrendatarioId: '', arrendatarioNombre: '',
+    codigo: '', numeroContratoOrigen: '', tipo: 'Arriendo', inmuebleId: '', inmuebleLabel: '', arrendatarioId: '', arrendatarioNombre: '',
     duracion: '', fechaInicio: '', fechaVencimiento: '', canon: '', canonValor: 0,
     incremento: 'IPC', deposito: '', seguro: 'No aplica', notas: '',
+    comision: { porcentaje: '', valorCanon: '', porcentajeAdministracion: '', valorAdministracion: '', valorConIva: '' },
     estado: 'activo', estadoLabel: 'Activo', documentos: [],
   };
 }

@@ -57,10 +57,12 @@ export async function nextInmuebleCodigo() {
 
 export function emptyInmueble() {
   return {
-    codigo: '', tipoVal: 'local', tipoLabel: 'Local comercial',
+    codigo: '', codigoInterno: '', tipoVal: 'local', tipoLabel: 'Local comercial',
     propietarioId: '', propietarioNombre: '',
     direccion: '', ciudad: '', barrio: '', area: '', piso: '', estrato: '',
-    aseguradora: 'Sin asegurar', matricula: '', catastral: '', descripcion: '',
+    aseguradora: 'Sin asegurar', matricula: '', catastral: '', valorCatastral: '', valorM2: '', descripcion: '',
+    agencia: '', grupo: '', zona: '',
+    lat: null, lng: null,
     detalleLocal: {
       centroComercial: '', numeroLocal: '', areaVitrina: '', areaExhibicion: '', alturaLibre: '',
       usoPermitido: '', actividadAutorizada: '', canonMinimo: '', canonNegociado: '', horarios: '',

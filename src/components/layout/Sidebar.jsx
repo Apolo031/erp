@@ -35,6 +35,11 @@ const NAV_ITEMS = [
     label: 'Mantenimientos',
     icon: <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L2 19l3 3 7.3-7.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2z" />,
   },
+  {
+    href: '/mapa',
+    label: 'Mapa',
+    icon: <><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3Z" /><path d="M9 3v15M15 6v15" /></>,
+  },
 ];
 
 export default function Sidebar() {

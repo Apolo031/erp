@@ -75,7 +75,11 @@ export default function ArrendatarioForm({ id }) {
           </div>
           <div className="row">
             <div className="field"><label>Cédula / NIT<span className="req">*</span></label><input value={form.cedula} onChange={(e) => set('cedula', e.target.value)} /></div>
+            <div className="field"><label>Tipo de documento</label><input placeholder="Ej: CC, NIT..." value={form.tipoDocumento} onChange={(e) => set('tipoDocumento', e.target.value)} /></div>
+          </div>
+          <div className="row">
             <div className="field"><label>Teléfono</label><input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} /></div>
+            <div />
           </div>
           <div className="row">
             <div className="field"><label>Celular</label><input value={form.celular} onChange={(e) => set('celular', e.target.value)} /></div>

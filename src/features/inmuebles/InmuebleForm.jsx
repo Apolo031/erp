@@ -178,6 +178,19 @@ export default function InmuebleForm({ id }) {
             <div className="field"><label>Matrícula inmobiliaria</label><input value={form.matricula} onChange={(e) => set('matricula', e.target.value)} /></div>
             <div className="field"><label>Número catastral</label><input value={form.catastral} onChange={(e) => set('catastral', e.target.value)} /></div>
           </div>
+          <div className="row">
+            <div className="field"><label>Avalúo catastral</label><input placeholder="$" value={form.valorCatastral} onChange={(e) => set('valorCatastral', e.target.value)} /></div>
+            <div className="field"><label>Valor m²</label><input placeholder="$" value={form.valorM2} onChange={(e) => set('valorM2', e.target.value)} /></div>
+          </div>
+          <div className="row cols3">
+            <div className="field"><label>Código interno</label><input value={form.codigoInterno} onChange={(e) => set('codigoInterno', e.target.value)} /></div>
+            <div className="field"><label>Agencia / grupo</label><input value={form.grupo} onChange={(e) => set('grupo', e.target.value)} /></div>
+            <div className="field"><label>Zona</label><input value={form.zona} onChange={(e) => set('zona', e.target.value)} /></div>
+          </div>
+          <div className="row">
+            <div className="field"><label>Latitud</label><input type="number" step="any" value={form.lat ?? ''} onChange={(e) => set('lat', e.target.value === '' ? null : Number(e.target.value))} /></div>
+            <div className="field"><label>Longitud</label><input type="number" step="any" value={form.lng ?? ''} onChange={(e) => set('lng', e.target.value === '' ? null : Number(e.target.value))} /></div>
+          </div>
           <div className="row" style={{ gridTemplateColumns: '1fr', marginBottom: 0 }}>
             <div className="field"><label>Descripción</label><textarea rows={2} value={form.descripcion} onChange={(e) => set('descripcion', e.target.value)} /></div>
           </div>
