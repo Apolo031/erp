@@ -59,7 +59,7 @@ export function emptyInmueble() {
   return {
     codigo: '', codigoInterno: '', tipoVal: 'local', tipoLabel: 'Local comercial',
     propietarioId: '', propietarioNombre: '',
-    direccion: '', ciudad: '', barrio: '', area: '', piso: '', estrato: '',
+    direccion: '', ciudad: '', pais: '', barrio: '', area: '', piso: '', estrato: '',
     aseguradora: 'Sin asegurar', matricula: '', catastral: '', valorCatastral: '', valorM2: '', descripcion: '',
     agencia: '', grupo: '', zona: '',
     lat: null, lng: null,

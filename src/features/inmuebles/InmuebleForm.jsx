@@ -159,7 +159,11 @@ export default function InmuebleForm({ id }) {
           </div>
           <div className="row">
             <div className="field"><label>Ciudad<span className="req">*</span></label><input value={form.ciudad} onChange={(e) => set('ciudad', e.target.value)} /></div>
+            <div className="field"><label>País</label><input value={form.pais} onChange={(e) => set('pais', e.target.value)} /></div>
+          </div>
+          <div className="row">
             <div className="field"><label>Barrio</label><input value={form.barrio} onChange={(e) => set('barrio', e.target.value)} /></div>
+            <div />
           </div>
           <div className="row">
             <div className="field"><label>Área (m²)</label><input type="number" value={form.area} onChange={(e) => set('area', e.target.value)} /></div>

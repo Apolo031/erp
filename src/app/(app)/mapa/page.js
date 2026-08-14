@@ -22,6 +22,7 @@ export default function MapaPage() {
   const [search, setSearch] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('');
   const [propietarioFiltro, setPropietarioFiltro] = useState('');
+  const [paisFiltro, setPaisFiltro] = useState('');
   const [expandedCities, setExpandedCities] = useState(() => new Set());
   const [selectedId, setSelectedId] = useState(null);
   const [focus, setFocus] = useState(null);
@@ -33,15 +34,21 @@ export default function MapaPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [conCoords]);
 
+  const paises = useMemo(() => {
+    const set = new Set(conCoords.map((i) => i.pais).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [conCoords]);
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return conCoords.filter((i) => {
-      const matchesTerm = !term || `${i.direccion} ${i.ciudad} ${i.propietarioNombre}`.toLowerCase().includes(term);
+      const matchesTerm = !term || `${i.direccion} ${i.ciudad} ${i.pais} ${i.propietarioNombre}`.toLowerCase().includes(term);
       const matchesEstado = !estadoFiltro || i.estado === estadoFiltro;
       const matchesPropietario = !propietarioFiltro || i.propietarioNombre === propietarioFiltro;
-      return matchesTerm && matchesEstado && matchesPropietario;
+      const matchesPais = !paisFiltro || i.pais === paisFiltro;
+      return matchesTerm && matchesEstado && matchesPropietario && matchesPais;
     });
-  }, [conCoords, search, estadoFiltro, propietarioFiltro]);
+  }, [conCoords, search, estadoFiltro, propietarioFiltro, paisFiltro]);
 
   const groupedByCity = useMemo(() => {
     const map = new Map();
@@ -82,7 +89,15 @@ export default function MapaPage() {
       />
 
       <div className="toolbar">
-        <input className="search" placeholder="Buscar por dirección, ciudad o propietario..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="search" placeholder="Buscar por dirección, ciudad, país o propietario..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select
+          style={{ border: '1px solid #DEE1E7', borderRadius: 10, padding: '9px 13px', fontSize: '.85rem', background: '#fff', minWidth: 160 }}
+          value={paisFiltro}
+          onChange={(e) => setPaisFiltro(e.target.value)}
+        >
+          <option value="">Todos los países</option>
+          {paises.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
         <select
           style={{ border: '1px solid #DEE1E7', borderRadius: 10, padding: '9px 13px', fontSize: '.85rem', background: '#fff', minWidth: 200 }}
           value={propietarioFiltro}
