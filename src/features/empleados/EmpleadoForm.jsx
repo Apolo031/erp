@@ -9,7 +9,11 @@ import Pill from '@/components/ui/Pill';
 import { useAuth } from '@/context/AuthContext';
 import { useCollection } from '@/hooks/useCollection';
 import { ESTADO_PILL } from '@/features/novedades/service';
-import { formatDate } from '@/lib/format';
+import {
+  prestacionesApi, emptyPrestacion, TIPO_OPTIONS as PRESTACION_TIPO_OPTIONS,
+  ESTADO_PILL as PRESTACION_ESTADO_PILL, diasParaVencer,
+} from '@/features/prestaciones/service';
+import { formatDate, formatCOP } from '@/lib/format';
 import {
   empleadosApi, emptyEmpleado, TIPO_DOCUMENTO_OPTIONS, GENERO_OPTIONS, ESTADO_CIVIL_OPTIONS,
   TIPO_CONTRATO_OPTIONS, ESTADO_CONTRATO_OPTIONS, FORMA_PAGO_OPTIONS, TIPO_CUENTA_OPTIONS,
@@ -47,6 +51,13 @@ export default function EmpleadoForm({ id }) {
     whereClauses: [['empleadoId', '==', isNew ? '__nuevo__' : id]],
     orderByField: 'createdAt', direction: 'desc',
   });
+
+  const { items: prestacionesEmpleado, loading: loadingPrestaciones } = useCollection('prestaciones', {
+    whereClauses: [['empleadoId', '==', isNew ? '__nuevo__' : id]],
+    orderByField: 'fechaVencimiento', direction: 'asc',
+  });
+  const [nuevaPrestacion, setNuevaPrestacion] = useState(emptyPrestacion());
+  const [prestacionBusy, setPrestacionBusy] = useState(false);
 
   useEffect(() => {
     if (isNew) return;
@@ -107,6 +118,36 @@ export default function EmpleadoForm({ id }) {
   }
   function removePago(i) {
     setForm((f) => ({ ...f, pagosFijos: f.pagosFijos.filter((_, idx) => idx !== i) }));
+  }
+
+  function selectTipoPrestacion(value) {
+    const opt = PRESTACION_TIPO_OPTIONS.find((t) => t.value === value);
+    setNuevaPrestacion((p) => ({ ...p, tipo: value, tipoLabel: opt?.label || '' }));
+  }
+
+  async function addPrestacion() {
+    if (!nuevaPrestacion.periodo.trim()) return;
+    setPrestacionBusy(true);
+    try {
+      await prestacionesApi.create({
+        ...nuevaPrestacion,
+        empleadoId: id,
+        empleadoNombre: form.nombreCompleto,
+        valorCausado: Number(nuevaPrestacion.valorCausado) || 0,
+        valorPagado: Number(nuevaPrestacion.valorPagado) || 0,
+      });
+      setNuevaPrestacion(emptyPrestacion());
+    } finally {
+      setPrestacionBusy(false);
+    }
+  }
+
+  async function marcarPrestacionPagada(p) {
+    await prestacionesApi.update(p.id, { estado: 'pagada', estadoLabel: 'Pagada', fechaPago: p.fechaPago || new Date().toISOString().slice(0, 10) });
+  }
+
+  async function removePrestacion(p) {
+    await prestacionesApi.remove(p.id);
   }
 
   async function handleSubmit(e) {
@@ -275,7 +316,7 @@ export default function EmpleadoForm({ id }) {
                 {ESTADO_CONTRATO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
-            <div />
+            <div className="field"><label>Días de vacaciones disponibles</label><input type="number" value={form.diasVacacionesDisponibles} onChange={(e) => set('diasVacacionesDisponibles', Number(e.target.value))} /></div>
           </div>
         </div>
 
@@ -363,6 +404,50 @@ export default function EmpleadoForm({ id }) {
           <h2>Notas</h2>
           <div className="field"><textarea rows={3} value={form.notas} onChange={(e) => set('notas', e.target.value)} /></div>
         </div>
+
+        {!isNew && (
+          <div className="card">
+            <h2>Prestaciones sociales <span className="badge">Cesantías, intereses y prima</span></h2>
+            <div className="owner-add">
+              <select value={nuevaPrestacion.tipo} onChange={(e) => selectTipoPrestacion(e.target.value)}>
+                {PRESTACION_TIPO_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <input placeholder="Periodo (ej: 2026 o 2026 - S1)" value={nuevaPrestacion.periodo} onChange={(e) => setNuevaPrestacion((p) => ({ ...p, periodo: e.target.value }))} style={{ flex: 1 }} />
+              <input placeholder="Valor causado" type="number" value={nuevaPrestacion.valorCausado} onChange={(e) => setNuevaPrestacion((p) => ({ ...p, valorCausado: e.target.value }))} style={{ width: 130 }} />
+              <input type="date" title="Fecha límite de pago" value={nuevaPrestacion.fechaVencimiento} onChange={(e) => setNuevaPrestacion((p) => ({ ...p, fechaVencimiento: e.target.value }))} style={{ width: 150 }} />
+              <button type="button" className="btn-add" disabled={prestacionBusy} onClick={addPrestacion}>+ Agregar</button>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              {loadingPrestaciones ? (
+                <div className="empty-state">Cargando...</div>
+              ) : prestacionesEmpleado.length === 0 ? (
+                <div className="empty-state">Sin prestaciones registradas.</div>
+              ) : (
+                prestacionesEmpleado.map((p) => {
+                  const dias = diasParaVencer(p.fechaVencimiento);
+                  const porVencer = p.estado === 'pendiente' && dias !== null && dias <= 30;
+                  return (
+                    <div className="contract-row" key={p.id}>
+                      <div>
+                        <div className="id">{p.tipoLabel} · {p.periodo}</div>
+                        <div className="tenant">
+                          {formatCOP(p.valorCausado)}
+                          {p.fechaVencimiento && ` · vence ${formatDate(p.fechaVencimiento)}`}
+                          {porVencer && <span style={{ color: 'var(--amber)', fontWeight: 700 }}> · {dias < 0 ? 'vencida' : `en ${dias} días`}</span>}
+                        </div>
+                      </div>
+                      <div className="right" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Pill status={PRESTACION_ESTADO_PILL[p.estado]}>{p.estadoLabel}</Pill>
+                        {p.estado === 'pendiente' && <button type="button" className="btn btn-secondary" style={{ fontSize: '.72rem', padding: '4px 10px' }} onClick={() => marcarPrestacionPagada(p)}>Marcar pagada</button>}
+                        <button type="button" onClick={() => removePrestacion(p)} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer' }}>✕</button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
 
         {!isNew && (
           <div className="card">

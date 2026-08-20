@@ -33,6 +33,7 @@ export function emptyEmpleado() {
     seguridadSocial: { eps: '', fondoPension: '', arl: '', cajaCompensacion: '', claseRiesgo: '' },
     familiares: [],
     pagosFijos: [],
+    diasVacacionesDisponibles: 0,
     foto: '', fotoNombre: '',
     uid: '', tieneCuenta: false, correoAcceso: '',
     notas: '', documentos: [],

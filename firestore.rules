@@ -82,6 +82,14 @@ service cloud.firestore {
       allow update, delete: if isGestionHumana();
     }
 
+    // Prestaciones sociales (cesantías, intereses, prima). Solo Gestión
+    // Humana las registra/edita; el empleado únicamente puede consultar las
+    // suyas (autoservicio de solo lectura, igual que su hoja de vida).
+    match /prestaciones/{docId} {
+      allow read: if isGestionHumana() || (signedIn() && miEmpleadoId() == resource.data.empleadoId);
+      allow write: if isGestionHumana();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useCollection } from '@/hooks/useCollection';
 import { empleadosApi } from '@/features/empleados/service';
 import { novedadesApi, emptyNovedad, TIPO_OPTIONS, ESTADO_PILL } from '@/features/novedades/service';
+import { TIPO_LABEL as PRESTACION_TIPO_LABEL, ESTADO_PILL as PRESTACION_ESTADO_PILL, diasParaVencer } from '@/features/prestaciones/service';
 import PageHead from '@/components/ui/PageHead';
 import Pill from '@/components/ui/Pill';
 import FormMsg from '@/components/ui/FormMsg';
@@ -42,9 +43,17 @@ export default function MiPerfilPage() {
   const [msg, setMsg] = useState('');
 
   const { items: misNovedades, loading: loadingNovedades } = useCollection('novedades', {
-    whereClauses: empleadoId ? [['empleadoId', '==', empleadoId]] : [],
+    whereClauses: [['empleadoId', '==', empleadoId || '__ninguno__']],
     orderByField: 'createdAt', direction: 'desc',
   });
+  const { items: misPrestaciones, loading: loadingPrestaciones } = useCollection('prestaciones', {
+    whereClauses: [['empleadoId', '==', empleadoId || '__ninguno__']],
+    orderByField: 'fechaVencimiento', direction: 'asc',
+  });
+  const prestacionesVisibles = useMemo(
+    () => misPrestaciones.map((p) => ({ ...p, diasAviso: diasParaVencer(p.fechaVencimiento) })),
+    [misPrestaciones]
+  );
   const [showForm, setShowForm] = useState(false);
   const [solicitud, setSolicitud] = useState(emptyNovedad());
   const [enviando, setEnviando] = useState(false);
@@ -195,6 +204,29 @@ export default function MiPerfilPage() {
           </div>
           <Field label="Sede" value={empleado.laboral?.sede} />
         </div>
+      </div>
+
+      <div className="card">
+        <h2>Prestaciones sociales</h2>
+        <div className="row" style={{ marginBottom: prestacionesVisibles.length ? 18 : 0 }}>
+          <Field label="Días de vacaciones disponibles" value={`${empleado.diasVacacionesDisponibles ?? 0} días`} />
+          <div />
+        </div>
+        {loadingPrestaciones ? (
+          <div className="empty-state">Cargando...</div>
+        ) : prestacionesVisibles.length === 0 ? null : (
+          prestacionesVisibles.map((p) => (
+            <div className="contract-row" key={p.id}>
+              <div>
+                <div className="id">{PRESTACION_TIPO_LABEL[p.tipo]} · {p.periodo}</div>
+                <div className="tenant">{formatDate(p.fechaVencimiento)}{p.diasAviso !== null && p.estado === 'pendiente' && p.diasAviso <= 30 && (
+                  <span style={{ color: 'var(--amber)', fontWeight: 700 }}> · {p.diasAviso < 0 ? 'vencida' : `en ${p.diasAviso} días`}</span>
+                )}</div>
+              </div>
+              <div className="right"><Pill status={PRESTACION_ESTADO_PILL[p.estado]}>{p.estadoLabel}</Pill></div>
+            </div>
+          ))
+        )}
       </div>
 
       {empleado.familiares?.length > 0 && (
