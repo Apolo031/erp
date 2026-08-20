@@ -19,9 +19,18 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font
 
 /* SIDEBAR */
 nav.side{width:246px;flex:none;background:var(--nav-bg);padding:22px 16px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:100vh;position:sticky;top:0;}
-.nav-group{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
+.nav-group{display:flex;flex-direction:column;margin-top:14px;}
 .nav-group:first-of-type{margin-top:0;}
-.nav-group-title{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5B6478;padding:0 12px;margin-bottom:2px;}
+.nav-group-title{
+  display:flex;align-items:center;justify-content:space-between;width:100%;
+  font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5B6478;
+  padding:6px 12px;margin-bottom:2px;background:none;border:none;cursor:pointer;font-family:inherit;
+}
+.nav-group-title:hover{color:#8B94AA;}
+.nav-group-chevron{width:13px;height:13px;transition:transform .18s ease;flex:none;}
+.nav-group-chevron.open{transform:rotate(180deg);}
+.nav-group-items{display:flex;flex-direction:column;gap:6px;overflow:hidden;max-height:0;transition:max-height .22s ease;}
+.nav-group-items.open{max-height:400px;}
 .brand{display:flex;align-items:center;gap:11px;padding:2px 8px 20px;margin-bottom:10px;border-bottom:1px solid var(--nav-border);}
 .brand .logo{width:38px;height:38px;border-radius:11px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex:none;}
 .brand .logo svg{width:19px;height:19px;stroke:#fff;}

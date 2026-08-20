@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -109,6 +110,13 @@ export default function Sidebar() {
     MI_CUENTA_GROUP,
   ];
 
+  const activeGroupTitle = groups.find((g) => g.items.some((item) => pathname.startsWith(item.href)))?.title;
+  const [openGroup, setOpenGroup] = useState(activeGroupTitle || groups[0]?.title);
+
+  function toggleGroup(title) {
+    setOpenGroup((prev) => (prev === title ? null : title));
+  }
+
   return (
     <nav className="side">
       <div className="brand">
@@ -123,23 +131,33 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {groups.map((group) => (
-        <div key={group.title} className="nav-group">
-          <div className="nav-group-title">{group.title}</div>
-          {group.items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-item${pathname.startsWith(item.href) ? ' active' : ''}`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {item.icon}
+      {groups.map((group) => {
+        const isOpen = openGroup === group.title;
+        return (
+          <div key={group.title} className="nav-group">
+            <button type="button" className="nav-group-title" onClick={() => toggleGroup(group.title)}>
+              {group.title}
+              <svg className={`nav-group-chevron${isOpen ? ' open' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
               </svg>
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      ))}
+            </button>
+            <div className={`nav-group-items${isOpen ? ' open' : ''}`}>
+              {group.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-item${pathname.startsWith(item.href) ? ' active' : ''}`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {item.icon}
+                  </svg>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       <div className="nav-footer">
         <button className="nav-item" onClick={logout} type="button">
