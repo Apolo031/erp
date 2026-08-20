@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useCollection } from '@/hooks/useCollection';
 import { empleadosApi } from '@/features/empleados/service';
+import { novedadesApi, emptyNovedad, TIPO_OPTIONS, ESTADO_PILL } from '@/features/novedades/service';
 import PageHead from '@/components/ui/PageHead';
 import Pill from '@/components/ui/Pill';
+import FormMsg from '@/components/ui/FormMsg';
+import { formatDate } from '@/lib/format';
+
+const MAX_SOPORTE_BYTES = 700 * 1024;
 
 const MAX_FOTO_BYTES = 700 * 1024;
 
@@ -35,6 +41,15 @@ export default function MiPerfilPage() {
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState('');
 
+  const { items: misNovedades, loading: loadingNovedades } = useCollection('novedades', {
+    whereClauses: empleadoId ? [['empleadoId', '==', empleadoId]] : [],
+    orderByField: 'createdAt', direction: 'desc',
+  });
+  const [showForm, setShowForm] = useState(false);
+  const [solicitud, setSolicitud] = useState(emptyNovedad());
+  const [enviando, setEnviando] = useState(false);
+  const [solicitudMsg, setSolicitudMsg] = useState(null);
+
   useEffect(() => {
     if (!empleadoId) { setLoading(false); return; }
     empleadosApi.get(empleadoId).then((data) => {
@@ -63,6 +78,50 @@ export default function MiPerfilPage() {
     } finally {
       setUploading(false);
       setTimeout(() => setMsg(''), 4000);
+    }
+  }
+
+  function setSolicitudField(field, value) { setSolicitud((s) => ({ ...s, [field]: value })); }
+
+  function selectTipo(value) {
+    const opt = TIPO_OPTIONS.find((t) => t.value === value);
+    setSolicitud((s) => ({ ...s, tipo: value, tipoLabel: opt?.label || '' }));
+  }
+
+  async function handleSoporte(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > MAX_SOPORTE_BYTES) {
+      setSolicitudMsg({ type: 'error', text: 'El archivo pesa demasiado (máx. ~700KB).' });
+      return;
+    }
+    const src = await readFileAsDataURL(file);
+    setSolicitud((s) => ({ ...s, soporte: { src, name: file.name } }));
+  }
+
+  async function handleEnviarSolicitud(e) {
+    e.preventDefault();
+    if (!solicitud.fechaInicio) {
+      setSolicitudMsg({ type: 'error', text: 'Elige al menos la fecha de inicio.' });
+      return;
+    }
+    setEnviando(true);
+    try {
+      await novedadesApi.create({
+        ...solicitud,
+        empleadoId,
+        empleadoNombre: empleado.nombreCompleto,
+        fechaFin: solicitud.fechaFin || solicitud.fechaInicio,
+        estado: 'pendiente', estadoLabel: 'Pendiente',
+      });
+      setSolicitudMsg({ type: 'ok', text: 'Solicitud enviada. Gestión Humana la va a revisar.' });
+      setSolicitud(emptyNovedad());
+      setTimeout(() => { setShowForm(false); setSolicitudMsg(null); }, 1200);
+    } catch (err) {
+      setSolicitudMsg({ type: 'error', text: 'No se pudo enviar la solicitud: ' + err.message });
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -150,6 +209,69 @@ export default function MiPerfilPage() {
           </div>
         </div>
       )}
+
+      <div className="card">
+        <div className="panel-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showForm ? 18 : 0 }}>
+          <h2 style={{ margin: 0 }}>Mis solicitudes</h2>
+          <button type="button" className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
+            {showForm ? 'Cancelar' : '+ Nueva solicitud'}
+          </button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={handleEnviarSolicitud} style={{ marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+            <div className="row">
+              <div className="field">
+                <label>Tipo</label>
+                <select value={solicitud.tipo} onChange={(e) => selectTipo(e.target.value)}>
+                  {TIPO_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div />
+            </div>
+            <div className="row">
+              <div className="field"><label>Fecha inicio<span className="req">*</span></label><input type="date" value={solicitud.fechaInicio} onChange={(e) => setSolicitudField('fechaInicio', e.target.value)} /></div>
+              <div className="field"><label>Fecha fin</label><input type="date" value={solicitud.fechaFin} onChange={(e) => setSolicitudField('fechaFin', e.target.value)} /></div>
+            </div>
+            {solicitud.tipo === 'permiso_horas' && (
+              <div className="row">
+                <div className="field"><label>Hora inicio</label><input type="time" value={solicitud.horaInicio} onChange={(e) => setSolicitudField('horaInicio', e.target.value)} /></div>
+                <div className="field"><label>Hora fin</label><input type="time" value={solicitud.horaFin} onChange={(e) => setSolicitudField('horaFin', e.target.value)} /></div>
+              </div>
+            )}
+            <div className="row" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="field"><label>Motivo</label><textarea rows={2} value={solicitud.motivo} onChange={(e) => setSolicitudField('motivo', e.target.value)} /></div>
+            </div>
+            <div className="row" style={{ gridTemplateColumns: '1fr', marginBottom: 0 }}>
+              <div className="field">
+                <label>Soporte (opcional, PDF o imagen, máx. ~700KB)</label>
+                <input type="file" accept="image/*,application/pdf" onChange={handleSoporte} />
+                {solicitud.soporte && <span style={{ fontSize: '.78rem', color: 'var(--mute)' }}>{solicitud.soporte.name}</span>}
+              </div>
+            </div>
+            <div className="actions">
+              <button className="btn btn-primary" type="submit" disabled={enviando}>{enviando ? 'Enviando...' : 'Enviar solicitud'}</button>
+            </div>
+            <FormMsg text={solicitudMsg?.text} type={solicitudMsg?.type} />
+          </form>
+        )}
+
+        {loadingNovedades ? (
+          <div className="empty-state">Cargando...</div>
+        ) : misNovedades.length === 0 ? (
+          <div className="empty-state">Aún no has enviado ninguna solicitud.</div>
+        ) : (
+          misNovedades.map((n) => (
+            <div className="contract-row" key={n.id}>
+              <div>
+                <div className="id">{n.tipoLabel}</div>
+                <div className="tenant">{n.fechaFin && n.fechaFin !== n.fechaInicio ? `${formatDate(n.fechaInicio)} — ${formatDate(n.fechaFin)}` : formatDate(n.fechaInicio)}</div>
+              </div>
+              <div className="right"><Pill status={ESTADO_PILL[n.estado]}>{n.estadoLabel}</Pill></div>
+            </div>
+          ))
+        )}
+      </div>
     </section>
   );
 }

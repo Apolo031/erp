@@ -86,6 +86,11 @@ const GESTION_HUMANA_GROUP = {
       label: 'Empleados',
       icon: <><circle cx="9" cy="8" r="3" /><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6" /><circle cx="18" cy="9" r="2.4" /><path d="M16 20c.2-2.4 1.9-4.3 4.2-4.8" /></>,
     },
+    {
+      href: '/gestion-humana/novedades',
+      label: 'Novedades',
+      icon: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /><path d="m9 15 2 2 4-4" /></>,
+    },
   ],
 };
 

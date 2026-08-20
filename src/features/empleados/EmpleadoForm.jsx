@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import PageHead from '@/components/ui/PageHead';
 import FormMsg from '@/components/ui/FormMsg';
+import Pill from '@/components/ui/Pill';
 import { useAuth } from '@/context/AuthContext';
+import { useCollection } from '@/hooks/useCollection';
+import { ESTADO_PILL } from '@/features/novedades/service';
+import { formatDate } from '@/lib/format';
 import {
   empleadosApi, emptyEmpleado, TIPO_DOCUMENTO_OPTIONS, GENERO_OPTIONS, ESTADO_CIVIL_OPTIONS,
   TIPO_CONTRATO_OPTIONS, ESTADO_CONTRATO_OPTIONS, FORMA_PAGO_OPTIONS, TIPO_CUENTA_OPTIONS,
@@ -37,6 +42,11 @@ export default function EmpleadoForm({ id }) {
   const [cuentaBusy, setCuentaBusy] = useState(false);
   const [cuentaLink, setCuentaLink] = useState('');
   const [cuentaError, setCuentaError] = useState('');
+
+  const { items: novedadesEmpleado, loading: loadingNovedades } = useCollection('novedades', {
+    whereClauses: [['empleadoId', '==', isNew ? '__nuevo__' : id]],
+    orderByField: 'createdAt', direction: 'desc',
+  });
 
   useEffect(() => {
     if (isNew) return;
@@ -353,6 +363,30 @@ export default function EmpleadoForm({ id }) {
           <h2>Notas</h2>
           <div className="field"><textarea rows={3} value={form.notas} onChange={(e) => set('notas', e.target.value)} /></div>
         </div>
+
+        {!isNew && (
+          <div className="card">
+            <div className="panel-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h2 style={{ margin: 0 }}>Historial de novedades</h2>
+              <Link href="/gestion-humana/novedades" style={{ fontSize: '.82rem', color: 'var(--blue)', textDecoration: 'none', fontWeight: 600 }}>Ver todas →</Link>
+            </div>
+            {loadingNovedades ? (
+              <div className="empty-state">Cargando...</div>
+            ) : novedadesEmpleado.length === 0 ? (
+              <div className="empty-state">Sin solicitudes registradas.</div>
+            ) : (
+              novedadesEmpleado.map((n) => (
+                <div className="contract-row" key={n.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/gestion-humana/novedades/${n.id}`)}>
+                  <div>
+                    <div className="id">{n.tipoLabel}</div>
+                    <div className="tenant">{n.fechaFin && n.fechaFin !== n.fechaInicio ? `${formatDate(n.fechaInicio)} — ${formatDate(n.fechaFin)}` : formatDate(n.fechaInicio)}</div>
+                  </div>
+                  <div className="right"><Pill status={ESTADO_PILL[n.estado]}>{n.estadoLabel}</Pill></div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         {!isNew && (
           <div className="card">

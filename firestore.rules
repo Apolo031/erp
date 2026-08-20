@@ -73,6 +73,15 @@ service cloud.firestore {
       allow write: if isGestionHumana();
     }
 
+    // Novedades y solicitudes (vacaciones, permisos, licencias, incapacidades).
+    // Un empleado puede crear y leer solo las suyas; solo Gestión Humana
+    // aprueba/rechaza (update) o borra.
+    match /novedades/{docId} {
+      allow read: if isGestionHumana() || (signedIn() && miEmpleadoId() == resource.data.empleadoId);
+      allow create: if isGestionHumana() || (signedIn() && miEmpleadoId() == request.resource.data.empleadoId);
+      allow update, delete: if isGestionHumana();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
