@@ -7,26 +7,70 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Datos operativos del ERP: solo usuarios autenticados (staff) leen/escriben.
+    function usuarioDoc() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function tieneRegistroUsuario() {
+      return signedIn() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function miRol() {
+      return tieneRegistroUsuario() ? usuarioDoc().data.role : null;
+    }
+
+    // Admin: acceso total (inmobiliaria + gestión humana).
+    function isAdmin() {
+      return miRol() == 'admin';
+    }
+
+    // Gestión Humana: acceso total al módulo de empleados (no a lo inmobiliario).
+    function isGestionHumana() {
+      return isAdmin() || miRol() == 'gestion_humana';
+    }
+
+    function miEmpleadoId() {
+      return tieneRegistroUsuario() ? usuarioDoc().data.empleadoId : null;
+    }
+
+    // Datos operativos del ERP inmobiliario: solo admin (staff de la
+    // inmobiliaria). Los empleados con cuenta de solo "usuario" (creada desde
+    // Gestión Humana) no deben poder ver propiedades, contratos ni finanzas.
     match /propietarios/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if isAdmin();
     }
     match /arrendatarios/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if isAdmin();
     }
     match /inmuebles/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if isAdmin();
     }
     match /contratos/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if isAdmin();
     }
     match /mantenimientos/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if isAdmin();
     }
 
     // Contadores para generar códigos secuenciales (INM-0143, ZC-2026-036, etc.)
     match /counters/{docId} {
-      allow read, write: if signedIn();
+      allow read, write: if isAdmin() || isGestionHumana();
+    }
+
+    // Gestión Humana: registro de empleados (datos personales y laborales).
+    match /empleados/{docId} {
+      allow read: if isGestionHumana() || (signedIn() && miEmpleadoId() == docId);
+      allow create, delete: if isGestionHumana();
+      allow update: if isGestionHumana()
+        || (signedIn() && miEmpleadoId() == docId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['foto', 'updatedAt']));
+    }
+
+    // Asignación de roles/cuentas. Cada usuario puede leer su propio registro
+    // (para saber su rol); solo Gestión Humana puede crearlos/editarlos.
+    match /usuarios/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isGestionHumana());
+      allow write: if isGestionHumana();
     }
 
     match /{document=**} {

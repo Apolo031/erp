@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
-const NAV_GROUPS = [
+const OPERACIONES_GROUPS = [
   {
     title: 'Operaciones',
     items: [
@@ -77,9 +77,37 @@ const NAV_GROUPS = [
   },
 ];
 
+const GESTION_HUMANA_GROUP = {
+  title: 'Gestión Humana',
+  items: [
+    {
+      href: '/gestion-humana/empleados',
+      label: 'Empleados',
+      icon: <><circle cx="9" cy="8" r="3" /><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6" /><circle cx="18" cy="9" r="2.4" /><path d="M16 20c.2-2.4 1.9-4.3 4.2-4.8" /></>,
+    },
+  ],
+};
+
+const MI_CUENTA_GROUP = {
+  title: 'Mi cuenta',
+  items: [
+    {
+      href: '/mi-perfil',
+      label: 'Mi perfil',
+      icon: <><circle cx="12" cy="8" r="3.4" /><path d="M5 20c.5-3.7 3.3-6.2 7-6.2S18.5 16.3 19 20" /></>,
+    },
+  ],
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, isAdmin, isGestionHumana } = useAuth();
+
+  const groups = [
+    ...(isAdmin ? OPERACIONES_GROUPS : []),
+    ...(isGestionHumana ? [GESTION_HUMANA_GROUP] : []),
+    MI_CUENTA_GROUP,
+  ];
 
   return (
     <nav className="side">
@@ -95,7 +123,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {NAV_GROUPS.map((group) => (
+      {groups.map((group) => (
         <div key={group.title} className="nav-group">
           <div className="nav-group-title">{group.title}</div>
           {group.items.map((item) => (
