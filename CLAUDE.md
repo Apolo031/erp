@@ -54,14 +54,16 @@ src/components/layout/Sidebar.jsx       menú acordeón, un grupo por módulo, v
 | Mapa | `/mapa` | Leaflet, agrupado por ciudad (acordeón), filtros estado/país/propietario |
 | Contabilidad / Financiero / Comercial | `/contabilidad` `/financiero` `/comercial` | **Placeholders vacíos**, sin construir |
 | Gestión Humana → Empleados | `/gestion-humana/empleados` | Completo (ver detalle abajo) |
-| Mi perfil | `/mi-perfil` | Autoservicio: solo lectura + cambiar foto |
+| Gestión Humana → Novedades | `/gestion-humana/novedades` | Completo: lista + aprobar/rechazar |
+| Mi perfil | `/mi-perfil` | Autoservicio: solo lectura + cambiar foto + solicitar/ver novedades propias |
 
 ### Gestión Humana — detalle
 
 - 15 empleados reales ya importados desde datos de Bitácora (`empleados` en Firestore): identificación, datos laborales, salario, seguridad social (EPS/pensión/ARL/caja), bancarios, familiares, pagos fijos.
 - El usuario admin (`admin@zonacentro.com`) está vinculado a su propio empleado (Adrian Camilo Aragón Rangel) vía `usuarios/{uid}.empleadoId`.
 - Crear cuenta de acceso a un empleado: botón en la ficha → `POST /api/empleados/crear-cuenta` (Admin SDK, sin contraseña — genera un enlace de "definir contraseña" que Gestión Humana copia y le manda al empleado). Requiere `FIREBASE_SERVICE_ACCOUNT_KEY` en Vercel.
-- **Pendiente / próximo paso acordado con el usuario:** módulo de **Novedades y solicitudes** (vacaciones, permisos, licencias, incapacidades) con flujo de aprobación, como puente hacia nómina real. La visión completa (nómina, PILA, prestaciones, IA) está descrita en `C:\Users\adria\Desktop\Inf ERP\gh\SOFTWARE NOMINA BITAKORA.docx` — es la referencia a futuro, no alcance actual.
+- **Novedades y solicitudes** (`novedades` en Firestore): vacaciones, permisos (por horas/jornada), licencias (remunerada/no remunerada), incapacidades. El empleado solicita desde Mi Perfil (con soporte PDF/imagen opcional, mismo límite ~700KB); Gestión Humana aprueba/rechaza con comentario en `/gestion-humana/novedades`. Historial visible en Mi Perfil (propio) y en la ficha del empleado (GH). Requiere el índice compuesto `novedades`: `empleadoId ASC, createdAt DESC` (ya creado en Firebase Console → Firestore → Índices).
+- **Próximo paso natural (no construido aún):** usar las novedades aprobadas como insumo real para un futuro módulo de liquidación/nómina. La visión completa (nómina, PILA, prestaciones, IA) está descrita en `C:\Users\adria\Desktop\Inf ERP\gh\SOFTWARE NOMINA BITAKORA.docx` — es la referencia a futuro, no alcance actual.
 
 ## Modelo de roles (crítico, no romperlo)
 
@@ -78,7 +80,9 @@ Para tocar las reglas: el archivo `firestore.rules` del repo es la fuente que se
 
 ## Firestore: colecciones
 
-`propietarios`, `arrendatarios`, `inmuebles`, `contratos`, `mantenimientos`, `counters`, `empleados`, `usuarios`. Ver los `service.js` de cada `features/<módulo>` para el shape exacto de cada documento — están escritos como la fuente de verdad del esquema (no hay un schema separado).
+`propietarios`, `arrendatarios`, `inmuebles`, `contratos`, `mantenimientos`, `counters`, `empleados`, `usuarios`, `novedades`. Ver los `service.js` de cada `features/<módulo>` para el shape exacto de cada documento — están escritos como la fuente de verdad del esquema (no hay un schema separado).
+
+`src/lib/firestore/crud.js` soporta `whereClauses: [[campo, operador, valor], ...]` en `collectionApi(nombre, opciones)` — necesario cuando la regla de seguridad es "solo tus propios registros" (ej. `novedades` filtrado por `empleadoId`), porque Firestore rechaza una consulta sin el `where` que la regla espera, aunque el usuario tendría permiso documento por documento. Si agregas un `where` nuevo en un módulo, probablemente necesites un índice compuesto (Firestore te da un link al fallar, o créalo a mano en Firestore → Índices).
 
 ## Gotchas ya resueltos (no los reintroduzcas)
 
